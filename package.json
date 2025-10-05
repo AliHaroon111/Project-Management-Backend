@@ -1,0 +1,20 @@
+{
+  "name": "projectmanagement",
+  "version": "1.0.0",
+  "description": "a project managment application",
+  "keywords": [
+    "backend",
+    "api",
+    "creation"
+  ],
+  "license": "ISC",
+  "author": "team codemate",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
