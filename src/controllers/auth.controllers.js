@@ -214,10 +214,22 @@ const verifyEmail = asyncHandler(async(req,res)=>{
     user.isEmailVerified = true
     await user.save({validateBeforeSave: false})
 
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    isEmailVerified: true
+                },
+                "Email is verified"
+            )
+        )
+
 })
 
 
 
 export {
-    registerUser , login, logoutUser , getCurrentUser
+    registerUser , login, logoutUser , getCurrentUser , verifyEmail
 }
