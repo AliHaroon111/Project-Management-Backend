@@ -228,8 +228,58 @@ const verifyEmail = asyncHandler(async(req,res)=>{
 
 })
 
+const resendEmailVerification = asyncHandler(async(req,res)=>{
+    const user = await User.findById(req.user?._id)
+
+    if(!user){
+        throw new ApiError(404,"User does not exist")
+    }
+
+    if(user.isEmailVerified){
+        throw new ApiError(409,"Email is already verified")
+    } // Email not verified we have to repeat the process
+
+    const {unHasedToken, hashedToken, tokenExpiry} = user.generateTemporaryToken()
+    user.emailVerificationToken=hashedToken
+    user.emailVerificationExpiry=tokenExpiry
+
+    await user.save({validateBeforeSave:false})
+
+    const {unHasedToken, hashedToken, tokenExpiry} =  user.generateTemporaryToken()
+    //when you run this the all things that it returning in model you got these
+
+    user.emailVerificationToken = hashedToken
+    user.emailVerificationExpiry = tokenExpiry
+
+    await user.save({validateBeforeSave:false});
+
+
+    await sendEmail({
+        email: user?.email,
+        subject : "Please verify your email",
+        MailgenContent: emailVerificationMailgenContent(
+            user.username,
+            `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHasedToken}`,
+        ),
+
+    });
+
+    return res
+        .status(200)
+        .json(ApiResponse(
+            200,
+            {},
+            "Mail has been send to you ID"
+        ))
+
+})
 
 
 export {
-    registerUser , login, logoutUser , getCurrentUser , verifyEmail
+    registerUser,
+    login,
+    logoutUser,
+    getCurrentUser,
+    verifyEmail,
+    resendEmailVerification
 }
