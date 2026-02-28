@@ -239,12 +239,6 @@ const resendEmailVerification = asyncHandler(async(req,res)=>{
         throw new ApiError(409,"Email is already verified")
     } // Email not verified we have to repeat the process
 
-    const {unHasedToken, hashedToken, tokenExpiry} = user.generateTemporaryToken()
-    user.emailVerificationToken=hashedToken
-    user.emailVerificationExpiry=tokenExpiry
-
-    await user.save({validateBeforeSave:false})
-
     const {unHasedToken, hashedToken, tokenExpiry} =  user.generateTemporaryToken()
     //when you run this the all things that it returning in model you got these
 
