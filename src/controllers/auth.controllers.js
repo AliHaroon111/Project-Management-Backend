@@ -27,7 +27,6 @@ const generateAccessAndRefressToken = async(userId) =>{
         );
     }
 };
- 
 
 const registerUser = asyncHandler( async(req,res) =>{
     const {email,username,password,role} = req.body    //this is how data comes up from FE
@@ -92,8 +91,6 @@ const registerUser = asyncHandler( async(req,res) =>{
         )
 
 });
-
-
 
 const login = asyncHandler( async(req,res)=>{
     
@@ -385,6 +382,26 @@ const resetForgotPassword = asyncHandler(async(req,res)=>{
     )
 })
 
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
+
+    const {oldPassword, newPassword} = req.body
+
+    const user = await User.findById(req.user?._id)
+
+    const isPasswordValid = isPasswordCorrect(oldPassword)
+
+
+    if(!isPasswordValid){
+        throw new ApiError(400,"invalid old password")
+    }
+
+    const user.password = newPassword
+
+    await user.save({validateBeforeSave: false})
+
+    return res.status(200).json(new ApiResponse(200,{},"Password change successfully"))
+})
+
 export {
     registerUser,
     login,
@@ -394,5 +411,6 @@ export {
     resendEmailVerification,
     refreshAccessToken,
     forgotPasswordRequest,
-    resetForgotPassword
+    resetForgotPassword,
+    changeCurrentPassword
 }
