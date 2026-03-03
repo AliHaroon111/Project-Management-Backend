@@ -4,6 +4,7 @@ import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js";
 import jwt from "jsonwebtoken"
+import crypto from "crypto";
 
 // Acc/Ref Token generation
 const generateAccessAndRefressToken = async(userId) =>{
@@ -192,7 +193,7 @@ const verifyEmail = asyncHandler(async(req,res)=>{
 
     const hashedToken = crypto
     .createHash("sha256")
-    .updated(verificationToken) //what do u want to encr
+    .update(verificationToken) //what do u want to encr
     .digest("hex")
 
     const user = await User.findOne({
@@ -316,7 +317,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
 const forgotPasswordRequest = asyncHandler(async(req,res)=>{
     const {email} = req.body
 
-    const user = User.findOne({email})
+    const user = await User.findOne({email})
 
     if(!user){
         throw new ApiError(404,"User does not exist")
@@ -395,7 +396,7 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"invalid old password")
     }
 
-    const user.password = newPassword
+    user.password = newPassword
 
     await user.save({validateBeforeSave: false})
 
