@@ -51,11 +51,11 @@ const userChangeCurrentPasswordValidator = ()=>{
     return [
         body("oldPassword")
         .notEmpty()
-        withMessage("Old password is required"),
+        .withMessage("Old password is required"),
 
         body("newPassword")
         .notEmpty() //if it's empty then we going to respnod withMessage
-        withMessage("New password is required"),
+        .withMessage("New password is required"),
     ]
 }
 
