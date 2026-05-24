@@ -12,7 +12,7 @@ const router = Router()
 router.route("/register").post(userRegisterValidator(),validate,registerUser) //with validation   ---------> validate ----> It's not a function itJust a midddleware
 router.route("/login").post(userLoginValidator(),validate,login) // here the validate is the common middleware
 router.route("/verify-email/:verificationToken").get(verifyEmail)
-router.route("/refres-token").post(refreshAccessToken)
+router.route("/refresh-token").post(refreshAccessToken)
 router.route("/forgot-password").post(userForgotPasswordValidator(), validate, forgotPasswordRequest)
 router.route("/reset-password/:resetToken").post(userResetForgotPasswordValidator(),validate , resetForgotPassword)
 

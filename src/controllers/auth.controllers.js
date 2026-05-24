@@ -98,7 +98,7 @@ const login = asyncHandler( async(req,res)=>{
     const {email,password,username} = req.body
 
     if(!email){
-        throw new ApiError("Email is required")
+        throw new ApiError(400,"Email is required")
     }
 
     const user = await User.findOne({email})
@@ -110,7 +110,7 @@ const login = asyncHandler( async(req,res)=>{
     const isPasswordValid = await user.isPasswordCorrect(password)
 
     if(!isPasswordValid){
-        throw new ApiError("Invalid Credentials")
+        throw new ApiError(400,"Invalid Credentials")
     }
     // is passw correct we need to genr TOKENS(optional)
        const {accessToken,refreshToken}= await generateAccessAndRefressToken(user._id)
@@ -258,7 +258,7 @@ const resendEmailVerification = asyncHandler(async(req,res)=>{
 
     return res
         .status(200)
-        .json(ApiResponse(
+        .json(new ApiResponse(
             200,
             {},
             "Mail has been send to you ID"
@@ -354,7 +354,7 @@ const resetForgotPassword = asyncHandler(async(req,res)=>{
     const {newPassword} = req.body
 
     const hashedToken = crypto
-    .create("sha-256")
+    .createHash("sha-256")
     .update(resetToken)
     .digest("hex")
 
@@ -389,9 +389,8 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 
     const user = await User.findById(req.user?._id)
 
-    const isPasswordValid = isPasswordCorrect(oldPassword)
-
-
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword)
+    
     if(!isPasswordValid){
         throw new ApiError(400,"invalid old password")
     }
