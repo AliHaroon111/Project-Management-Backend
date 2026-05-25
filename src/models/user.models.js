@@ -2,7 +2,7 @@ import mongoose, {Schema} from "mongoose";      // {model, Schema }   -> i delet
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import crypto from "crypto"
-
+import { AvailableUserRole, UserRoleEnum } from "../utils/constants.js";
 // import dotenv from "dotenv";
 // dotenv.config()         // don't need to import and config it bcz we already do it in index.js(entry point)
 
@@ -46,6 +46,12 @@ const userSchema = new Schema({
     isEmailVerified : {
         type : Boolean,
         default: false,
+    },
+    // role based access control (RBAC)  --> to control the access of user
+    role: {
+        type: String,
+        enum: AvailableUserRole,
+        default: UserRoleEnum.MEMBER,
     },
     refreshToken:{
         type:String,

@@ -2,7 +2,7 @@ import { User } from "../models/user.models.js"; //help us to query anything fro
 import { ApiResponse } from "../utils/api-response.js";
 import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js";
+import { emailVerificationMailgenContent, forgotPasswordMailgenContent, sendEmail } from "../utils/mail.js";
 import jwt from "jsonwebtoken"
 import crypto from "crypto";
 
@@ -97,11 +97,16 @@ const login = asyncHandler( async(req,res)=>{
     
     const {email,password,username} = req.body
 
-    if(!email){
+    if(!email && !username){ //fixes
         throw new ApiError(400,"Email is required")
     }
 
-    const user = await User.findOne({email})
+    const user = await User.findOne({
+        $or: [
+            ...(email ? [{ email }] : []),
+            ...(username ? [{ username }] : []),
+        ],
+    });
 
     if(!user){
         throw new ApiError(400,"The requested USer Doesn't exists")
@@ -354,7 +359,7 @@ const resetForgotPassword = asyncHandler(async(req,res)=>{
     const {newPassword} = req.body
 
     const hashedToken = crypto
-    .createHash("sha-256")
+    .createHash("sha256")
     .update(resetToken)
     .digest("hex")
 
@@ -364,7 +369,7 @@ const resetForgotPassword = asyncHandler(async(req,res)=>{
     })
 
     if(!user){
-        throw new ApiError(489,"Token is invalid or expired")
+        throw new ApiError(400,"Token is invalid or expired")
     }
 
     user.forgotPasswordToken = undefined
@@ -402,6 +407,26 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,{},"Password change successfully"))
 })
 
+const updateAvatar = asyncHandler(async (req, res) => {
+    if (!req.file) throw new ApiError(400, "Avatar file is required");
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                avatar: {
+                    url: `/public/temp/${req.file.filename}`,
+                    localPath: req.file.path,
+                },
+            },
+        },
+        { new: true }
+    ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry");
+
+    return res.status(200).json(
+        new ApiResponse(200, { user }, "Avatar updated successfully")
+    );
+});
 export {
     registerUser,
     login,
@@ -412,5 +437,6 @@ export {
     refreshAccessToken,
     forgotPasswordRequest,
     resetForgotPassword,
-    changeCurrentPassword
+    changeCurrentPassword,
+    updateAvatar
 }
