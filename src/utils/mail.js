@@ -77,27 +77,23 @@ const emailVerificationMailgenContent = (username,verificatioUrl) =>{
 }
 
 // same as above - // generating email
-const forgotPasswordMailgenContent = (username,passwordResetUrl) =>{
-    return{
-
-        body:{
-            name:username,
-            intro:"we got a request to reset the password of your account.",
-        },
-        action:{
-            Instructions:"To reset your password click on the following button or link",
-            button:{
-                color:'#22BC66', //optional
-                text : "Reset Password",
-                link : passwordResetUrl
-
+const forgotPasswordMailgenContent = (username, passwordResetUrl) => {
+    return {
+        body: {
+            name: username,
+            intro: "We received a request to reset the password for your account.",
+            action: {
+                instructions: "To reset your password, click the button below:",
+                button: {
+                    color: "#FF6B35",
+                    text: "Reset Password",
+                    link: passwordResetUrl,
+                },
             },
+            outro: "If you did not request a password reset, please ignore this email.",
         },
-        // outro start after the actions
-        outro : "Need help, or have question just reply to this email, we'd love to help."
-    }
-}
-
+    };
+};
 export {
     emailVerificationMailgenContent,
      forgotPasswordMailgenContent,
