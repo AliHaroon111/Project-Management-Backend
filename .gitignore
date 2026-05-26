@@ -7,4 +7,8 @@ npm-debug.log
 
 # OS generated files
 .DS_Store
-Thumbs.db
+Thumbs.dbsrc/controllers/auth.controllers.ADDITIONS.js
+src/controllers/auth.controllers.ADDITIONS.js
+src/controllers/auth.controllers.ADDITIONS.js
+public/temp/*
+!public/temp/.gitkeep
