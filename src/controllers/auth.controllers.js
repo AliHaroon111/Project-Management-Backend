@@ -30,7 +30,7 @@ const generateAccessAndRefressToken = async(userId) =>{
 };
 
 const registerUser = asyncHandler( async(req,res) =>{
-    const {email,username,password,role} = req.body    //this is how data comes up from FE
+    const {email,username,password,role,adminSecret} = req.body    //this is how data comes up from FE
 
     // This is the part you find exising User.......
     //check in DB if The User already exist or not
@@ -42,14 +42,22 @@ const registerUser = asyncHandler( async(req,res) =>{
         throw new ApiError(409,"User with email or username already exists",[])
     }
 
+    // Role assignment — admin requires secret key from .env
+    let assignedRole = "member"; // default
+    if (role === "admin" || role === "project_admin") {
+        if (adminSecret !== process.env.ADMIN_SECRET) {
+            throw new ApiError(403, "Invalid admin secret key");
+        }
+        assignedRole = role;
+    }
     // This is the part you don't find exising User...... then you have to save it in DB
-    const user = await User.create({       //here User-->not able to acc schema methods bcz it's the mongoose model but {user} can
+    const user = await User.create({
         email,
         username,
         password,
-        isEmailVerified : false 
-
-    })  //UserSchema k jobhi methods hain unko hum { User } se access ni kar sakte -------> Hum unko { user } se access kar sakty hain  -----> why? bcz User is a mongoose method
+        role: assignedRole,
+        isEmailVerified: false,
+    });  //UserSchema k jobhi methods hain unko hum { User } se access ni kar sakte -------> Hum unko { user } se access kar sakty hain  -----> why? bcz User is a mongoose method
 
     
     const {unHasedToken, hashedToken, tokenExpiry} =  user.generateTemporaryToken()
@@ -66,7 +74,7 @@ const registerUser = asyncHandler( async(req,res) =>{
         subject : "Please verify your email",
         MailgenContent: emailVerificationMailgenContent(
             user.username,
-            `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHasedToken}`,
+            `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHasedToken}`, // wrong api Chnage it users to auth
         ),
 
     });

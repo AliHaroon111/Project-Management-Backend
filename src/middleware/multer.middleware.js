@@ -1,9 +1,15 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "public/temp");
+        const uploadPath = "public/temp";
+        // Creates folder if it doesn't exist — no more 500 crashes
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
         const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
@@ -23,5 +29,5 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+    limits: { fileSize: 2 * 1024 * 1024 },
 });
