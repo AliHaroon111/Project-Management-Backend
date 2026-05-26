@@ -8,15 +8,9 @@ import { swaggerSpec } from "./swagger/swagger.js";
 
 const app = express();
 
-// ─── Security Headers (Helmet) ────────────────────────────────────────────────
+// ─── Security + Logging ───────────────────────────────────────────────────────
 app.use(helmet());
-
-// ─── HTTP Request Logging (Morgan) ────────────────────────────────────────────
-if (process.env.NODE_ENV !== "production") {
-    app.use(morgan("dev"));
-} else {
-    app.use(morgan("combined"));
-}
+app.use(process.env.NODE_ENV !== "production" ? morgan("dev") : morgan("combined"));
 
 // ─── Core Middleware ──────────────────────────────────────────────────────────
 app.use(express.json({ limit: "16kb" }));
@@ -25,67 +19,47 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-app.use(
-    cors({
-        origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:5173",
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    })
-);
+app.use(cors({
+    origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-// ─── API Documentation (Swagger) ──────────────────────────────────────────────
-app.use(
-    "/api/v1/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, {
-        explorer: true,
-        customSiteTitle: "Project Management API Docs",
-    })
-);
+// ─── API Docs ─────────────────────────────────────────────────────────────────
+app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 import healthCheckRouter from "./routes/healthcheck.routes.js";
-import authRouter from "./routes/auth.routes.js";
-import taskRouter from "./routes/task.routes.js";
+import authRouter       from "./routes/auth.routes.js";
+import taskRouter       from "./routes/task.routes.js";
+import projectRouter    from "./routes/project.routes.js";   // NEW
+import activityRouter   from "./routes/activity.routes.js";  // NEW
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/tasks", taskRouter);
+app.use("/api/v1/auth",        authRouter);
+app.use("/api/v1/tasks",       taskRouter);
+app.use("/api/v1/projects",    projectRouter);   // NEW
+app.use("/api/v1/activity",    activityRouter);  // NEW
 
-// ─── 404 Handler ─────────────────────────────────────────────────────────────
+// ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        statusCode: 404,
-        message: `Route ${req.originalUrl} not found`,
-    });
+    res.status(404).json({ success: false, statusCode: 404, message: `Route ${req.originalUrl} not found` });
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
-// handler existed — unhandled errors leaked stack traces to clients
-// Must have exactly 4 params for Express to treat it as error middleware
 import { ApiError } from "./utils/api-error.js";
 import { ApiResponse } from "./utils/api-response.js";
 
 app.use((err, req, res, next) => {
     if (err instanceof ApiError) {
-        return res.status(err.statusCode).json(
-            new ApiResponse(err.statusCode, null, err.message)
-        );
+        return res.status(err.statusCode).json(new ApiResponse(err.statusCode, null, err.message));
     }
-
-    // Multer file size error
     if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json(
-            new ApiResponse(400, null, "File size exceeds 2MB limit")
-        );
+        return res.status(400).json(new ApiResponse(400, null, "File size exceeds 2MB limit"));
     }
-
     console.error("Unhandled error:", err);
-    return res.status(500).json(
-        new ApiResponse(500, null, "Internal server error")
-    );
+    return res.status(500).json(new ApiResponse(500, null, "Internal server error"));
 });
 
 export default app;
