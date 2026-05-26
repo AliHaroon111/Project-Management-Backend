@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { AvailableTaskStatus, TaskStatusEnum } from "../utils/constants.js";
+import { AvailableTaskStatus, TaskStatusEnum, AvailableTaskPriority, TaskPriorityEnum } from "../utils/constants.js";
 
 const taskSchema = new Schema(
     {
@@ -18,9 +18,26 @@ const taskSchema = new Schema(
             enum: AvailableTaskStatus,
             default: TaskStatusEnum.TODO,
         },
+        // NEW — priority
+        priority: {
+            type: String,
+            enum: AvailableTaskPriority,
+            default: TaskPriorityEnum.MEDIUM,
+        },
+        // NEW — due date
+        dueDate: {
+            type: Date,
+            default: null,
+        },
         assignedTo: {
             type: Schema.Types.ObjectId,
             ref: "User",
+            default: null,
+        },
+        // NEW — belongs to a project
+        project: {
+            type: Schema.Types.ObjectId,
+            ref: "Project",
             default: null,
         },
         createdBy: {
@@ -31,5 +48,10 @@ const taskSchema = new Schema(
     },
     { timestamps: true }
 );
+
+// Index for fast filtering
+taskSchema.index({ status: 1, priority: 1, dueDate: 1 });
+taskSchema.index({ project: 1 });
+taskSchema.index({ assignedTo: 1 });
 
 export const Task = mongoose.model("Task", taskSchema);
