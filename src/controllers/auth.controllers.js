@@ -435,6 +435,35 @@ const updateAvatar = asyncHandler(async (req, res) => {
         new ApiResponse(200, { user }, "Avatar updated successfully")
     );
 });
+
+// ─── Update Profile ───────────────────────────────────────────────────────────
+const updateProfile = asyncHandler(async (req, res) => {
+    const { fullName, username } = req.body;
+
+    if (!fullName && !username) {
+        throw new ApiError(400, "Provide at least fullName or username to update");
+    }
+
+    if (username) {
+        const exists = await User.findOne({ username, _id: { $ne: req.user._id } });
+        if (exists) throw new ApiError(409, "Username is already taken");
+    }
+
+    const updateFields = {};
+    if (fullName) updateFields.fullName = fullName.trim();
+    if (username) updateFields.username = username.trim().toLowerCase();
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: updateFields },
+        { new: true }
+    ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry");
+
+    return res.status(200).json(
+        new ApiResponse(200, { user }, "Profile updated successfully")
+    );
+});
+
 export {
     registerUser,
     login,
@@ -446,5 +475,6 @@ export {
     forgotPasswordRequest,
     resetForgotPassword,
     changeCurrentPassword,
-    updateAvatar
+    updateAvatar,
+    updateProfile
 }
